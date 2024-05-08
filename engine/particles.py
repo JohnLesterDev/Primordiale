@@ -1,4 +1,3 @@
-import pygame
 import random
 
 from engine.settings import *
@@ -6,16 +5,22 @@ from engine.settings import *
 class ParticleManager:
     def __init__(self) -> None:
         self.particle_list = []
+    
+    def getall(self) -> list:
+        return [particle.pos for particle in self.particle_list]
 
-    def update(self) -> None:
+    def update(self, gravity=False) -> None:
         for particle in self.particle_list:
-            self.pos[0] += self.vel[0]
-            self.pos[1] += self.vel[1]
+            particle.pos[0] += particle.vel[0]
+            particle.pos[1] += particle.vel[1]
 
-            if self.span <= 0:
+            if gravity:
+                particle.vel[1] += GRAVITY
+
+            if particle.span <= 0:
                 self.particle_list.remove(particle)
             else:
-                self.span -= 0.9
+                particle.span -= 0.9
     
     def create(self, position:list, max_velocity:list, max_lifespan_percent:float) -> None:
         rand_vel = [
