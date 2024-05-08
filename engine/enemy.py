@@ -3,10 +3,11 @@ from engine.settings import *
 from math import atan2, degrees, pi, cos, sin
 
 class Enemy(Food):
-    def __init__(self, position, dimension, display):
+    def __init__(self, position, dimension, display, enemy_speed=None):
         super().__init__(position, dimension, display)
         self.vel = [0,0]
         self.color = [189, 25, 23]
+        self.enemy_speed = enemy_speed
 
     def chase_player(self, player):
         # Calculate the direction towards the player
@@ -17,7 +18,10 @@ class Enemy(Food):
         angle = degrees(atan2(dy, dx))
 
         # Adjust the enemy's velocity based on the calculated angle
-        speed = ENEMY_SPEED  # Adjust as needed
+        if not self.enemy_speed:
+            speed = ENEMY_SPEED  # Adjust as needed
+        else:
+            speed = self.enemy_speed
         self.vel[0] = speed * cos(angle * pi / 180)  # Convert angle to radians
         self.vel[1] = speed * sin(angle * pi / 180)
 

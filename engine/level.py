@@ -5,9 +5,12 @@ from engine.food import Food
 from engine.enemy import Enemy
 from engine.player import Player
 from engine.display import Display
-from engine.settings import *
 from engine.particles import ParticleManager
 
+from engine.audio import *
+from engine.settings import *
+
+from engine.settings import ENEMY_SPEED
 
 
 class LevelManager:
@@ -24,8 +27,73 @@ class LevelManager:
         self.source = source
         self.shake = 0
         self.shake_offset = [0, 0]
+        self.leveled_sfx = load_sound("level-1.wav")
+        self.eat_sfx = load_sound("eat-1.wav")
+        self.eat_sfx.set_volume(0.4)
+        self.game_over_font = pygame.font.Font(None, 36)
+        self.highest_level = 1
+        self.is_game_over = False
+        self.timer_text = ""
 
-    def initialize_level(self):
+    def update_timer_text(self, timer_text):
+        self.timer_text = timer_text
+
+    def game_over(self, start_time):
+        start_time = start_time
+        pygame.mouse.set_visible(True)
+        pause_background_music()
+        # Game over message
+        game_over_text = self.game_over_font.render("Game Over", True, (255, 255, 255))
+        game_over_rect = game_over_text.get_rect(center=(self.display.display_width // 2, self.display.display_height // 2 - 50))
+
+        # Highest level message
+        highest_level_text = self.game_over_font.render("Highest Level: " + str(self.highest_level) + " On " + self.timer_text, True, (255, 255, 255))
+        highest_level_rect = highest_level_text.get_rect(center=(self.display.display_width // 2, self.display.display_height // 2))
+
+        # Replay button
+        replay_text = self.game_over_font.render("Restart?", True, (255, 255, 255))
+        replay_rect = replay_text.get_rect(center=(self.display.display_width // 2, self.display.display_height // 2 + 50))
+
+        # Draw everything to the screen
+        self.screen.fill((0, 0, 0))
+        self.screen.blit(game_over_text, game_over_rect)
+        self.screen.blit(highest_level_text, highest_level_rect)
+        self.screen.blit(replay_text, replay_rect)        
+
+        # Wait for player input
+        while True:
+            self.screen.fill((0, 0, 0))
+            self.screen.blit(game_over_text, game_over_rect)
+            self.screen.blit(highest_level_text, highest_level_rect)
+            self.screen.blit(replay_text, replay_rect)
+
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    sys.exit()
+                elif event.type == pygame.MOUSEBUTTONDOWN:
+                    if replay_rect.collidepoint(event.pos):
+                        self.is_game_over = False
+                        start_time = pygame.time.get_ticks()
+                        self.reset_game()  # Reset the game if replay button is clicked
+                        pygame.mouse.set_visible(False)
+                        return start_time
+                    
+            self.source.blit(self.screen, [0,0])
+            pygame.display.update()
+
+    def reset_game(self):
+        self.current_level = 1
+        self.food_remaining = 5
+        self.enemy_count = 1
+        self.food = []
+        self.enemies = []
+        self.timer_text = ""
+        unpause_background_music()
+        self.initialize_level()
+
+
+    def initialize_level(self, enemy_speed=None):
         self.food = []
         for _ in range(self.food_remaining):
             food_width = int(FOOD_DIMEN[0] * self.display.display_width)
@@ -67,21 +135,22 @@ class LevelManager:
             if distance < min_distance:
                 continue
 
-            enemy = Enemy([random_x, random_y], ENEMY_DIMEN, self.display)
+            enemy = Enemy([random_x, random_y], ENEMY_DIMEN, self.display, enemy_speed)
             self.enemies.append(enemy)
 
 
     def check_collisions(self):
         for enemy in self.enemies:
             if enemy.rect.colliderect(self.player.rect):
-                pygame.quit()
-                sys.exit()
+                self.is_game_over = True
+                return
 
         for food in self.food:
             if food.rect.colliderect(self.player.rect):
                 self.food.remove(food)
                
                 self.shake = SHAKE_DURATION
+                self.eat_sfx.play()
 
                 if not self.food:
                     food.spit_particles(self.partman, is_last=True)
@@ -129,10 +198,22 @@ class LevelManager:
                             food.rect.top = enemy.rect.bottom
 
     def reset_level(self):
+        global ENEMY_SPEED
         self.current_level += 1
         self.food_remaining += 2
         self.enemy_count += 1
-        self.initialize_level()
+        self.leveled_sfx.play()
+        self.highest_level = self.current_level
+
+
+        if self.current_level == 14:
+            self.enemy_count = 14
+        
+        ENEMY_SPEED += 0.056
+
+        print(ENEMY_SPEED)
+
+        self.initialize_level(ENEMY_SPEED)
 
 
     def update(self, mpos):
