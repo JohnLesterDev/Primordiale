@@ -1,14 +1,28 @@
 import pygame
 
+from engine.settings import *
+from engine.display import Display
+from engine.particles import ParticleManager
+
 pygame.init()
+pygame.mixer.init()
 
-display_info = pygame.display.Info()
+display = Display(WIDTH, HEIGHT)
+clock = pygame.time.Clock()
 
-# Get total screen width and height
-screen_width = display_info.current_w
-screen_height = display_info.current_h
+screen = pygame.display.set_mode((display.display_width, display.display_height))
+pygame.display.set_caption("Primordiale - JohnLesterDev")
 
-print("Total screen size: {} x {}".format(screen_width, screen_height))
 
-# Quit Pygame
+running = True
+while running:
+    clock.tick(FPS)
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            running = False
+    
+    screen.fill((0,0,0))
+    
+    pygame.display.update()
+
 pygame.quit()

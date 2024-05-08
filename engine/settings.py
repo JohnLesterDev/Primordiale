@@ -1,0 +1,3 @@
+FPS = 120
+WIDTH = 0.75
+HEIGHT = 0.55
