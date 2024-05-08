@@ -7,7 +7,7 @@ class ParticleManager:
         self.particle_list = []
     
     def getall(self) -> list:
-        return [particle.pos for particle in self.particle_list]
+        return [particle for particle in self.particle_list]
 
     def update(self, gravity=False) -> None:
         for particle in self.particle_list:
@@ -22,7 +22,7 @@ class ParticleManager:
             else:
                 particle.span -= 0.9
     
-    def create(self, position:list, max_velocity:list, max_lifespan_percent:float) -> None:
+    def create(self, position:list, max_velocity:list, max_lifespan_percent:float, color=(255, 255, 255)) -> None:
         rand_vel = [
             random.randint(max_velocity[0]*-1,max_velocity[0]),
             random.randint(max_velocity[1]*-1,max_velocity[1])
@@ -32,12 +32,13 @@ class ParticleManager:
         
         lifespan = random.uniform(FPS / 2, max_lifespan)
         
-        particle = Particle(position, rand_vel, lifespan)
+        particle = Particle(position, rand_vel, lifespan, color=color)
         self.particle_list.append(particle)
         
 
 class Particle:
-    def __init__(self, position:list, velocity:list, lifespan:int) -> None:
+    def __init__(self, position:list, velocity:list, lifespan:int, color=(255, 255, 255)) -> None:
         self.pos = position
         self.vel = velocity
         self.span = lifespan
+        self.color = color

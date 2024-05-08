@@ -1,12 +1,10 @@
 import pygame
-import random
 import sys
 
 from engine.settings import *
 from engine.display import Display
 from engine.particles import ParticleManager
 from engine.player import Player
-from engine.enemy import Enemy
 from engine.level import LevelManager  # Import LevelManager from level.py
 
 pygame.init()
@@ -18,12 +16,14 @@ partman = ParticleManager()
 player = Player([0, 0], PLAYER_DIMEN, display)
 font = pygame.font.Font(None, 36)
 enemies = []
+shake_offset = [0, 0]
 
 screen = pygame.display.set_mode((display.display_width, display.display_height))
+canvas = pygame.Surface((display.display_width, display.display_height))
 pygame.display.set_caption("Primordiale - JohnLesterDev")
 pygame.mouse.set_visible(False)
 
-level_manager = LevelManager(screen, player, display)  # Initialize LevelManager with player and display
+level_manager = LevelManager(screen, canvas, player, display, partman)  # Initialize LevelManager with player and display
 level_manager.initialize_level()
 
 def display_info(fps, level_info, screen, font):
@@ -40,14 +40,14 @@ while running:
         if event.type == pygame.QUIT:
             running = False
 
-    screen.fill((0, 0, 0))
+    canvas.fill((0, 0, 0))
 
-    partman.update()
+    partman.update(gravity=True)
+    for particle in partman.getall():
+        pygame.draw.circle(canvas, particle.color, particle.pos, 6.5)
 
-    level_manager.update()
     mpos = pygame.mouse.get_pos()
-    player.update_pos(mpos[0], mpos[1])
-    pygame.draw.rect(screen, player.color, player.rect)
+    level_manager.update(mpos)
 
     display_info(clock.get_fps(), "Level: " + str(level_manager.current_level), screen, font)
 
