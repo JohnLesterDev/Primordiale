@@ -1,3 +1,4 @@
+import random
 import pygame
 import sys
 
@@ -14,6 +15,7 @@ pygame.mixer.init()
 display = Display(WIDTH, HEIGHT)
 clock = pygame.time.Clock()
 partman = ParticleManager()
+ppartmen = ParticleManager()
 player = Player([0, 0], PLAYER_DIMEN, display)
 font = pygame.font.Font(None, 36)
 enemies = []
@@ -40,12 +42,12 @@ def display_info(fps, level_info, timer, screen, font):
 
 
 running = True
-start_time = pygame.time.get_ticks()  # Get the initial time
+start_time = pygame.time.get_ticks()  
 while running:
-    current_time = pygame.time.get_ticks() - start_time  # Calculate elapsed time
-    minutes = current_time // 60000  # Calculate minutes
-    seconds = (current_time // 1000) % 60  # Calculate seconds
-    milliseconds = current_time % 1000  # Calculate milliseconds
+    current_time = pygame.time.get_ticks() - start_time  
+    minutes = current_time // 60000  
+    seconds = (current_time // 1000) % 60 
+    milliseconds = current_time % 1000 
     timer_text = "{:02}:{:02}:{:03}".format(minutes, seconds, milliseconds)
 
     clock.tick(FPS)
@@ -56,15 +58,20 @@ while running:
     canvas.fill((0, 0, 0))
 
     if not level_manager.is_game_over:
+        mpos = pygame.mouse.get_pos()
+        ppartmen.update()
+        for particle_ in ppartmen.getall():
+            pygame.draw.circle(canvas, particle_.color, particle_.pos, random.randint(2, 4))
+        
         partman.update(gravity=True)
         for particle in partman.getall():
-            pygame.draw.circle(canvas, particle.color, particle.pos, 6.5)
+            pygame.draw.circle(canvas, particle.color, particle.pos, random.randint(4, 7))
 
-        mpos = pygame.mouse.get_pos()
-        level_manager.update(mpos)
+
+        level_manager.update(mpos, ppartmen)
         level_manager.update_timer_text(timer_text)
 
-        level_manager.check_collisions()  # Check collisions between player, enemies, and food
+        level_manager.check_collisions(partman) 
     else:
         start_time = level_manager.game_over(start_time)
 
