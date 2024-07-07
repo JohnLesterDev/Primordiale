@@ -12,7 +12,7 @@ from engine.particles import ParticleManager
 pygame.init()
 pygame.mixer.init()
 
-display = Display(WIDTH, HEIGHT)
+display = Display(WIDTH, HEIGHT, persist=True)
 clock = pygame.time.Clock()
 partman = ParticleManager()
 ppartmen = ParticleManager()

@@ -5,7 +5,7 @@ pygame.init()
 display_info = pygame.display.Info()
 
 class Display:
-    def __init__(self, width_per=None, height_per=None) -> None:
+    def __init__(self, width_per=None, height_per=None, persist=False) -> None:
         self.max_width = display_info.current_w
         self.max_height = display_info.current_h
 
@@ -15,3 +15,6 @@ class Display:
         else:
             self.display_height = self.max_height
             self.display_width = self.display_width
+
+        if persist:
+            self.display_width = self.display_height
