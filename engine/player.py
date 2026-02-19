@@ -1,36 +1,22 @@
 import pygame
-
 from engine.display import Display
-
-
 
 class Player:
     def __init__(self, position:list, dimension:list, display:Display) -> None:
-        dimension = [dimension[0]*display.display_width, dimension[1]*display.display_height]
-        self.rect = pygame.Rect(position, dimension)
-        self.dimen = dimension
+        # FIX: We scale BOTH dimensions by display.height to keep it square
+        pixel_w = int(dimension[0] * display.height)
+        pixel_h = int(dimension[1] * display.height)
+        
+        self.rect = pygame.Rect(position, (pixel_w, pixel_h))
+        self.dimen = [pixel_w, pixel_h]
         self.color = (106, 109, 115)
         self.lives = 5
     
     def update_pos(self, x, y, centered=False, dimen=None):
         if centered:
-            player_center_x = self.rect.centerx
-            player_center_y = self.rect.centery
-
-            mouse_offset_x = x - player_center_x
-            mouse_offset_y = y - player_center_y
-
-            self.rect.move_ip(mouse_offset_x, mouse_offset_y)
+            self.rect.center = (x, y)
         else:
             if dimen:
                 self.rect.update([x, y], dimen)
             else:
                 self.rect.update([x, y], self.dimen)
-        
-        if dimen:
-            self.rect.update([x, y], dimen)
-        else:
-            self.rect.update([x, y], self.dimen)
-
-    
-

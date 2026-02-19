@@ -10,8 +10,8 @@ from engine.particles import ParticleManager
 from engine.audio import *
 from engine.settings import *
 
+# We need to access the global ENEMY_SPEED variable to modify it
 from engine.settings import ENEMY_SPEED
-
 
 class LevelManager:
     def __init__(self, source, screen, player:Player, display:Display, partman:ParticleManager):
@@ -39,24 +39,29 @@ class LevelManager:
     def update_timer_text(self, timer_text):
         self.timer_text = timer_text
 
+    # FIX 3: Removed the 'while True' loop. 
+    # This now just draws the frame once and returns the button location.
+    # The Main Loop in primordiale.py handles the clicking.
     def game_over(self, start_time):
-        start_time = start_time
         pygame.mouse.set_visible(True)
         pause_background_music()
+        
         game_over_text = self.game_over_font.render("Game Over", True, (255, 255, 255))
-        game_over_rect = game_over_text.get_rect(center=(self.display.display_width // 2, self.display.display_height // 2 - 50))
+        game_over_rect = game_over_text.get_rect(center=(self.display.width // 2, self.display.height // 2 - 50))
 
         highest_level_text = self.game_over_font.render("Highest Level: " + str(self.highest_level) + " On " + self.timer_text, True, (255, 255, 255))
-        highest_level_rect = highest_level_text.get_rect(center=(self.display.display_width // 2, self.display.display_height // 2))
+        highest_level_rect = highest_level_text.get_rect(center=(self.display.width // 2, self.display.height // 2))
 
-        replay_text = self.game_over_font.render("Restart?", True, (255, 255, 255))
-        replay_rect = replay_text.get_rect(center=(self.display.display_width // 2, self.display.display_height // 2 + 50))
+        replay_text = self.game_over_font.render("Click to Restart", True, (255, 255, 255))
+        replay_rect = replay_text.get_rect(center=(self.display.width // 2, self.display.height // 2 + 50))
 
         self.screen.fill((0, 0, 0))
         self.screen.blit(game_over_text, game_over_rect)
         self.screen.blit(highest_level_text, highest_level_rect)
         self.screen.blit(replay_text, replay_rect)        
 
+        self.source.blit(self.screen, [0,0])
+        
         while True:
             self.screen.fill((0, 0, 0))
             self.screen.blit(game_over_text, game_over_rect)
@@ -77,7 +82,8 @@ class LevelManager:
                     
             self.source.blit(self.screen, [0,0])
             pygame.display.update()
-
+        
+        
     def reset_game(self):
         global ENEMY_SPEED
 
@@ -88,7 +94,10 @@ class LevelManager:
         self.enemies = []
         self.highest_level = 1
         self.timer_text = ""
-        ENEMY_SPEED = 1.4
+        
+        # FIX 1: Reset speed to the Delta Time equivalent (210.0), not 4.0
+        ENEMY_SPEED = 210.0 
+        
         unpause_background_music()
         self.initialize_level()
 
@@ -100,11 +109,10 @@ class LevelManager:
     def initialize_level(self, enemy_speed=None):
         self.food = []
         for _ in range(self.food_remaining):
-            food_width = int(FOOD_DIMEN[0] * self.display.display_width)
-            food_height = int(FOOD_DIMEN[1] * self.display.display_height)
-
-            random_x = random.randint(0, self.display.display_width - food_width)
-            random_y = random.randint(0, self.display.display_height - food_height)
+            food_pixel_size = int(FOOD_DIMEN[0] * self.display.height)
+            
+            random_x = random.randint(0, self.display.width - food_pixel_size)
+            random_y = random.randint(0, self.display.height - food_pixel_size)
             
             if random.random() < self.get_food_random_movement_chance():
                 food = Food([random_x, random_y], FOOD_DIMEN, self.display, has_random_movement=True)
@@ -115,26 +123,25 @@ class LevelManager:
 
         self.enemies = []
         while len(self.enemies) < self.enemy_count:
-            enemy_width = int(ENEMY_DIMEN[0] * self.display.display_width)
-            enemy_height = int(ENEMY_DIMEN[1] * self.display.display_height)
+            enemy_pixel_size = int(ENEMY_DIMEN[0] * self.display.height)
 
             edge = random.choice(["top", "bottom", "left", "right"])
 
             if edge == "top":
-                random_x = random.randint(0, self.display.display_width - enemy_width)
+                random_x = random.randint(0, self.display.width - enemy_pixel_size)
                 random_y = 0
             elif edge == "bottom":
-                random_x = random.randint(0, self.display.display_width - enemy_width)
-                random_y = self.display.display_height - enemy_height
+                random_x = random.randint(0, self.display.width - enemy_pixel_size)
+                random_y = self.display.height - enemy_pixel_size
             elif edge == "left":
                 random_x = 0
-                random_y = random.randint(0, self.display.display_height - enemy_height)
+                random_y = random.randint(0, self.display.height - enemy_pixel_size)
             else: 
-                random_x = self.display.display_width - enemy_width
-                random_y = random.randint(0, self.display.display_height - enemy_height)
+                random_x = self.display.width - enemy_pixel_size
+                random_y = random.randint(0, self.display.height - enemy_pixel_size)
 
             player_pos = self.player.rect.center
-            enemy_pos = (random_x + enemy_width / 2, random_y + enemy_height / 2)
+            enemy_pos = (random_x + enemy_pixel_size / 2, random_y + enemy_pixel_size / 2)
             distance = ((player_pos[0] - enemy_pos[0]) ** 2 + (player_pos[1] - enemy_pos[1]) ** 2) ** 0.5
 
             min_distance = 450  
@@ -167,19 +174,7 @@ class LevelManager:
         for enemy1 in self.enemies:
             for enemy2 in self.enemies:
                 if enemy1 != enemy2 and enemy1.rect.colliderect(enemy2.rect):
-                    if enemy1.size >= enemy2.size:  # Check if enemy1 is bigger than enemy2
-                        dx = enemy2.rect.centerx - enemy1.rect.centerx
-                        dy = enemy2.rect.centery - enemy1.rect.centery
-
-                        distance = ((dx ** 2) + (dy ** 2)) ** 0.5
-                        if distance == 0:  
-                            distance = 1
-                        # repel_force = 50 
-                        # move_x = repel_force * (dx / distance)
-                        # move_y = repel_force * (dy / distance)
-
-                        # enemy1.rect.move_ip(-move_x, -move_y)
-
+                    if enemy1.size >= enemy2.size:
                         enemy1.increase_size_and_slow_down()
                         self.kill_sfx.play()
                         enemy2.spit_particles(partman)
@@ -205,39 +200,39 @@ class LevelManager:
 
     def reset_level(self):
         global ENEMY_SPEED
+        
+        # FIX 2: Removed self.partman.clear() so confetti stays!
+        
         self.current_level += 1
         self.food_remaining += 2
         self.enemy_count += 1
         self.leveled_sfx.play()
         self.highest_level = self.current_level
 
-
         if self.current_level >= 14:
             self.enemy_count = 14
-            ENEMY_SPEED += 0.09
+            # Adjusted increment for Pixels Per Second (was 0.09)
+            ENEMY_SPEED += 9.0 
         
         self.initialize_level(ENEMY_SPEED)
 
 
-    def update(self, mpos, ppartmen):
-        # Check if there's an enemy with a size of 5 or above
+    def update(self, mpos, ppartmen, dt):
         is_big_enemy_present = any(enemy.size >= 5 for enemy in self.enemies)
 
         for enemy in self.enemies:
-            enemy.chase_player(self.player)
+            enemy.chase_player(self.player, dt)
             pygame.draw.rect(self.screen, enemy.color, enemy.rect)
         
         for food in self.food:
-            food.update_position()  # Update position of food
+            food.update_position(dt) 
             pygame.draw.rect(self.screen, food.color, food.rect)
 
         self.player.update_pos(mpos[0], mpos[1])
         ppartmen.create(list(self.player.rect.center), [random.randint(0, 5), random.randint(0, 5)], 0.02, color=self.player.color)
 
-        # Shake the screen if a big enemy is present
         if is_big_enemy_present:
-            self.shake = 30  # Adjust as needed
-
+            self.shake = 30
 
         pygame.draw.rect(self.screen, self.player.color, self.player.rect)
 
