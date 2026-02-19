@@ -13,7 +13,7 @@ CONFIG_PATH = os.path.join(BASE_DIR, "config.toml")
 DEFAULT_CONFIG = {
     "window": {
         "fps": 120,
-        "shake_intensity": 11,
+        "shake_intensity": 9,
         "shake_duration": 50
     },
     "physics": {
@@ -23,13 +23,13 @@ DEFAULT_CONFIG = {
         "dimensions": [0.04, 0.04]
     },
     "food": {
-        "dimensions": [0.02, 0.02]
+        "dimensions": [0.017, 0.017]
     },
     "enemy": {
         "dimensions": [0.025, 0.025],
         "base_speed": 210.0,       # Increased for dt (was 1.7)
         "slow_down_factor": 1.9,
-        "inflate_size": 25
+        "inflate_size": 15
     }
 }
 
@@ -58,6 +58,13 @@ ENEMY_DIMEN = _config["enemy"]["dimensions"]
 ENEMY_SPEED = _config["enemy"]["base_speed"]
 ENEMY_SLOW_DOWN_FACTOR = _config["enemy"]["slow_down_factor"]
 ENEMY_INFLATE_SIZE = _config["enemy"]["inflate_size"]
+
+# --- NEW PARTICLE SETTINGS ---
+# 0.2% to 0.4% of screen height (Subtle trail)
+PARTICLE_SCALE_TRAIL = [0.004, 0.008] 
+
+# 0.6% to 1.2% of screen height (The "Distracting" Chunky Confetti)
+PARTICLE_SCALE_EXPLOSION = [0.002, 0.005]
 
 def create_config_file():
     # ... (Same logic, just writes the new large numbers)

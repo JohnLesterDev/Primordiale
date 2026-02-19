@@ -78,20 +78,20 @@ while running:
     if not level_manager.is_game_over:
         mpos = pygame.mouse.get_pos()
         
-        # Pass DT to particles
+        # TRAIL (ppartmen)
         ppartmen.update(dt=dt)
-        for particle_ in ppartmen.getall():
-            pygame.draw.circle(canvas, particle_.color, particle_.pos, random.randint(2, 4))
+        for p in ppartmen.getall():
+            # Draw using the particle's specific size
+            pygame.draw.circle(canvas, p.color, p.pos, p.size)
         
+        # EXPLOSIONS (partman)
         partman.update(dt=dt, gravity=True)
-        for particle in partman.getall():
-            pygame.draw.circle(canvas, particle.color, particle.pos, random.randint(4, 7))
+        for p in partman.getall():
+            pygame.draw.circle(canvas, p.color, p.pos, p.size)
 
-        # Pass DT to Level Manager
         level_manager.update(mpos, ppartmen, dt)
         level_manager.update_timer_text(timer_text)
-
-        level_manager.check_collisions(partman) 
+        level_manager.check_collisions(partman)
     else:
         start_time = level_manager.game_over(start_time)
 

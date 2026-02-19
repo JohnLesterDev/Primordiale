@@ -2,6 +2,7 @@ import random
 import pygame # Need this for Vectors
 from engine.player import Player
 from engine.particles import ParticleManager
+from engine.settings import *
 
 class Food(Player):
     def __init__(self, position, dimension, display, has_random_movement=False):
@@ -56,8 +57,17 @@ class Food(Player):
 
     def spit_particles(self, partman: ParticleManager, is_last=False, mpos=None):
         if not is_last:
-            for _ in range(220):  
-                partman.create(list(self.rect.center), [random.randint(0, 19), random.randint(0, 19)], 1.4, color=self.color)
+            for _ in range(220):
+                # Calculate size for this specific particle
+                s_min = PARTICLE_SCALE_EXPLOSION[0] * self.display.height
+                s_max = PARTICLE_SCALE_EXPLOSION[1] * self.display.height
+                p_size = random.uniform(s_min, s_max)
+                
+                partman.create(list(self.rect.center), [random.randint(0, 19), random.randint(0, 19)], 1.4, size=p_size, color=self.color)
         else:
-            for _ in range(1000):  
-                partman.create(list(mpos), [19,19], 1, random.choice(self.color_choices))
+            for _ in range(1000):
+                s_min = PARTICLE_SCALE_EXPLOSION[0] * self.display.height
+                s_max = PARTICLE_SCALE_EXPLOSION[1] * self.display.height
+                p_size = random.uniform(s_min, s_max)
+                
+                partman.create(list(mpos), [19,19], 1, size=p_size, color=random.choice(self.color_choices))
